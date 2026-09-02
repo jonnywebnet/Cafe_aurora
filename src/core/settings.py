@@ -1,1 +1,20 @@
+"""Configurações globais do Café Aurora."""
 
+WIDTH = 1100
+HEIGHT = 700
+FPS = 60
+TITLE = "Café Aurora"
+
+BG = (30, 24, 32)
+PANEL = (62, 45, 48)
+PANEL_LIGHT = (91, 66, 60)
+CREAM = (255, 239, 202)
+GOLD = (226, 170, 76)
+GREEN = (112, 178, 112)
+RED = (210, 94, 91)
+TEXT_MUTED = (210, 193, 173)
+WHITE = (255, 255, 255)
+
+DAY_LENGTH = 8
+STARTING_MONEY = 20
+STARTING_REPUTATION = 3
