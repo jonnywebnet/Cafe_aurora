@@ -50,6 +50,19 @@ class CafeGame:
             self.background = pygame.transform.smoothscale(self.background, (WIDTH, HEIGHT))
         except (FileNotFoundError, pygame.error):
             self.background = None
+        self.character_images = {}
+        character_files = {
+            "Lia": "character_lia.png",
+            "Rafael": "character_rafael.png",
+            "Dona Amélia": "character_amelia.png",
+            "Caio": "character_caio.png",
+        }
+        for character_name, filename in character_files.items():
+            try:
+                image = pygame.image.load(f"assets/generated/{filename}").convert_alpha()
+                self.character_images[character_name] = pygame.transform.smoothscale(image, (125, 188))
+            except (FileNotFoundError, pygame.error):
+                pass
         self.title_font = pygame.font.Font(None, 56)
         self.heading_font = pygame.font.Font(None, 36)
         self.body_font = pygame.font.Font(None, 26)
@@ -135,6 +148,9 @@ class CafeGame:
             return
         self.panel(pygame.Rect(48, 250, 430, 330), PANEL)
         self.text(self.customer.name, (82, 290), self.heading_font)
+        portrait = self.character_images.get(self.customer.name)
+        if portrait:
+            self.screen.blit(portrait, (330, 300))
         self.text("“Olá! Eu gostaria de…”,", (82, 350), self.body_font, TEXT_MUTED)
         self.text(self.customer.order.name, (82, 395), self.title_font, GOLD)
         elapsed = time.monotonic() - self.customer_started_at
