@@ -59,3 +59,14 @@ pedido.wav | pedido feito
 | Nome | Descrição |
 |-----|-----|
 tema_cafe.mp3 | música ambiente
+
+
+## Assets disponíveis na versão atual
+
+O primeiro asset visual integrado ao protótipo é:
+
+| Caminho | Uso | Estado |
+|---|---|---|
+| `assets/generated/cafe_aurora_interior.png` | Fundo panorâmico do interior da cafeteria | Integrado em `src/game.py` |
+
+Os demais sprites, sons e músicas continuam planejados para as próximas iterações. O jogo utiliza um fallback de cores caso o cenário não seja encontrado, portanto a execução continua possível sem o arquivo visual.

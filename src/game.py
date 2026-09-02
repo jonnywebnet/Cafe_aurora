@@ -44,6 +44,12 @@ class CafeGame:
         pygame.display.set_caption(TITLE)
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.clock = pygame.time.Clock()
+        self.background = None
+        try:
+            self.background = pygame.image.load("assets/generated/cafe_aurora_interior.png").convert()
+            self.background = pygame.transform.smoothscale(self.background, (WIDTH, HEIGHT))
+        except (FileNotFoundError, pygame.error):
+            self.background = None
         self.title_font = pygame.font.Font(None, 56)
         self.heading_font = pygame.font.Font(None, 36)
         self.body_font = pygame.font.Font(None, 26)
@@ -193,7 +199,11 @@ class CafeGame:
                 self.next_customer()
 
     def draw(self) -> None:
-        self.screen.fill(BG)
+        if self.background:
+            self.screen.blit(self.background, (0, 0))
+            pygame.draw.rect(self.screen, (20, 15, 18, 150), pygame.Rect(0, 0, WIDTH, HEIGHT))
+        else:
+            self.screen.fill(BG)
         self.reset_buttons()
         if self.state == "menu":
             self.draw_menu()
