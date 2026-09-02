@@ -201,7 +201,9 @@ class CafeGame:
     def draw(self) -> None:
         if self.background:
             self.screen.blit(self.background, (0, 0))
-            pygame.draw.rect(self.screen, (20, 15, 18, 150), pygame.Rect(0, 0, WIDTH, HEIGHT))
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((20, 15, 18, 150))
+            self.screen.blit(overlay, (0, 0))
         else:
             self.screen.fill(BG)
         self.reset_buttons()
