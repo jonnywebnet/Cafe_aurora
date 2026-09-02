@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 import sys
+import time
 from dataclasses import dataclass
 
 import pygame
@@ -55,10 +56,12 @@ class CafeGame:
         self.served = 0
         self.missed = 0
         self.customer: Customer | None = None
+        self.customer_started_at = 0.0
         self.message = ""
         self.message_color = TEXT_MUTED
         self.buttons: list[tuple[pygame.Rect, str]] = []
         self.customer_names = ["Lia", "Rafael", "Dona Amélia", "Caio", "Bia"]
+        self.day_event = "A vizinhança começa a descobrir a cafeteria."
 
     def text(self, value: str, position: tuple[int, int], font: pygame.font.Font | None = None, color: tuple[int, int, int] = CREAM) -> None:
         surface = (font or self.body_font).render(value, True, color)
@@ -85,6 +88,7 @@ class CafeGame:
         self.draw_header("Uma cafeteria pequena, muitos encontros.")
         self.text("Uma nova manhã começa", (80, 190), self.title_font)
         self.text("Atenda clientes, mantenha a reputação e faça a Aurora prosperar.", (84, 255), self.body_font, TEXT_MUTED)
+        self.text(f"História do dia: {self.day_event}", (84, 290), self.small_font, GOLD)
         self.panel(pygame.Rect(80, 330, 410, 170), PANEL)
         self.text("PROGRESSO", (110, 360), self.small_font, GOLD)
         self.text(f"Dia atual: {self.day}", (110, 400))
@@ -92,6 +96,14 @@ class CafeGame:
         self.text(f"Reputação: {self.reputation}/5", (110, 440))
         self.button(pygame.Rect(650, 360, 280, 64), "Abrir a cafeteria")
         self.text("Clique ou pressione Enter para começar", (650, 445), self.small_font, TEXT_MUTED)
+
+    def _event_for_day(self) -> str:
+        events = (
+            "Uma cliente lembra do café da avó e recomenda a Aurora.",
+            "A chuva trouxe novos visitantes para o bairro.",
+            "Um músico local promete tocar na cafeteria esta noite.",
+        )
+        return events[(self.day - 1) % len(events)]
 
     def start_day(self) -> None:
         self.state = "game"
@@ -103,6 +115,7 @@ class CafeGame:
         name = random.choice(self.customer_names)
         order = random.choice(MENU)
         self.customer = Customer(name, random.randint(1, 3), order)
+        self.customer_started_at = time.monotonic()
         self.message = f"{name} entrou e aguarda seu atendimento."
         self.message_color = TEXT_MUTED
 
@@ -118,7 +131,12 @@ class CafeGame:
         self.text(self.customer.name, (82, 290), self.heading_font)
         self.text("“Olá! Eu gostaria de…”,", (82, 350), self.body_font, TEXT_MUTED)
         self.text(self.customer.order.name, (82, 395), self.title_font, GOLD)
-        self.text(f"Paciência: {'●' * self.customer.patience}{'○' * (3 - self.customer.patience)}", (82, 475), self.body_font, GREEN if self.customer.patience > 1 else RED)
+        elapsed = time.monotonic() - self.customer_started_at
+        time_limit = 5.0 + self.customer.patience * 2.0
+        remaining = max(0.0, time_limit - elapsed)
+        self.text(f"Paciência: {'●' * self.customer.patience}{'○' * (3 - self.customer.patience)}", (82, 475), self.body_font, GREEN if remaining > 4 else RED)
+        pygame.draw.rect(self.screen, PANEL_LIGHT, pygame.Rect(82, 505, 300, 10), border_radius=5)
+        pygame.draw.rect(self.screen, GREEN if remaining > 4 else RED, pygame.Rect(82, 505, int(300 * remaining / time_limit), 10), border_radius=5)
         self.text(self.message, (82, 530), self.small_font, self.message_color)
         self.text("Escolha o item preparado:", (540, 270), self.body_font)
         self.reset_buttons()
@@ -145,7 +163,6 @@ class CafeGame:
         if self.served + self.missed >= DAY_LENGTH:
             self.state = "report"
         else:
-            pygame.time.delay(500)
             self.next_customer()
 
     def draw_report(self) -> None:
@@ -160,6 +177,20 @@ class CafeGame:
         self.reset_buttons()
         self.button(pygame.Rect(80, 560, 250, 60), "Próximo dia")
         self.button(pygame.Rect(370, 560, 220, 60), "Menu principal", PANEL_LIGHT)
+
+    def update(self) -> None:
+        if self.state != "game" or not self.customer:
+            return
+        time_limit = 5.0 + self.customer.patience * 2.0
+        if time.monotonic() - self.customer_started_at >= time_limit:
+            self.reputation = max(1, self.reputation - 1)
+            self.missed += 1
+            self.message = f"{self.customer.name} perdeu a paciência e foi embora."
+            self.message_color = RED
+            if self.served + self.missed >= DAY_LENGTH:
+                self.state = "report"
+            else:
+                self.next_customer()
 
     def draw(self) -> None:
         self.screen.fill(BG)
@@ -181,6 +212,7 @@ class CafeGame:
                     self.serve(label.split("   $")[0])
                 elif label == "Próximo dia":
                     self.day += 1
+                    self.day_event = self._event_for_day()
                     self.start_day()
                 else:
                     self.state = "menu"
@@ -209,6 +241,7 @@ class CafeGame:
 
     def run(self) -> None:
         while self.running:
+            self.update()
             for event in pygame.event.get():
                 self.handle_event(event)
             self.draw()
